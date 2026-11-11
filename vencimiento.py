@@ -1,20 +1,13 @@
-"""Decide que pagina se publica: la propuesta o el aviso de vencimiento.
-Cuenta dias habiles (lunes a viernes, sin festivos de propuesta.json) desde fecha_envio."""
+"""Publica la propuesta hasta fecha_limite (inclusive, hora de Colombia).
+Despues de esa fecha publica el aviso de propuesta no disponible."""
 import json, shutil, os, datetime as dt
 cfg = json.load(open("propuesta.json", encoding="utf-8"))
-inicio = dt.date.fromisoformat(cfg["fecha_envio"])
-festivos = {dt.date.fromisoformat(d) for d in cfg.get("festivos", [])}
-d, contados = inicio, 0
-while contados < cfg["dias_habiles"]:
-    d += dt.timedelta(days=1)
-    if d.weekday() < 5 and d not in festivos:
-        contados += 1
-ultimo_dia = d
+ultimo_dia = dt.date.fromisoformat(cfg["fecha_limite"])
 hoy = dt.datetime.now(dt.timezone(dt.timedelta(hours=-5))).date()
 os.makedirs("_site", exist_ok=True)
-if hoy > ultimo_dia:
+if hoy > ultimo_dia or not os.path.exists("index.html"):
     shutil.copy("expirada.html", "_site/index.html")
-    print(f"Propuesta vencida (ultimo dia: {ultimo_dia}). Se publica el aviso.")
+    print(f"Se publica el aviso (ultimo dia: {ultimo_dia}).")
 else:
     shutil.copy("index.html", "_site/index.html")
     print(f"Propuesta activa hasta el {ultimo_dia} inclusive.")
